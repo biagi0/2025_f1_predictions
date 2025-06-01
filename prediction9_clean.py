@@ -112,7 +112,7 @@ team_points = {
 max_pts = max(team_points.values())
 team_perf_score = {team: pts / max_pts for team, pts in team_points.items()}
 
-qualifying_2025["Team"] = qualifying_2025["Driver"].map(driver_to_team)
+qualifying_2025["Team"] = qualifying_2025["Driver"].map(driver_to_team_2024)
 qualifying_2025["TeamPerformanceScore"] = qualifying_2025["Team"].map(team_perf_score)
 
 """ Merge the 2025 Qualifying with the 2024 Race Data """
