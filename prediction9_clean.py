@@ -14,6 +14,9 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.metrics import mean_absolute_error
 
+""" Import custom racepace function """
+from racepace import race_pace
+
 """ Plotting Imports """
 import matplotlib.pyplot as plt
 
@@ -72,13 +75,7 @@ sector_times["TotalSectorTime (s)"] = (
 )
 
 """ Add the clean are race pace from FP2 (racepace.py) """
-clean_air_race_pace = {
-    "LEC": 78.778125, "VER": 79.716667, "TSU": 79.983364,
-    "PIA": 80.056750, "HAM": 80.565455, "HUL": 81.883467,
-    "NOR": 82.356625, "GAS": 84.467300, "HAD": 84.633500,
-    "OCO": 86.808533, "SAI": 89.532938, "ALB": 90.852222,
-    "ANT": 90.885200, "RUS": 94.015000, "ALO": 109.644875
-}
+clean_air_race_pace = race_pace(2025, 9, "FP2", "MEDIUM")
 
 """ Qualifying data for the current race"""
 qualifying_2025 = pd.DataFrame({
@@ -89,7 +86,7 @@ qualifying_2025 = pd.DataFrame({
         72.131, 72.199, 72.252, 72.284, 72.641, 72.756, 72.763
     ]
 })
-qualifying_2025["CleanAirRacePace (s)"] = qualifying_2025["Driver"].map(clean_air_race_pace)
+qualifying_2025["CleanAirRacePace (sec)"] = qualifying_2025["Driver"].map(clean_air_race_pace)
 
 """ Load in the weather forecast for the race """
 load_dotenv()
@@ -115,7 +112,7 @@ team_points = {
 max_pts = max(team_points.values())
 team_perf_score = {team: pts / max_pts for team, pts in team_points.items()}
 
-qualifying_2025["Team"] = qualifying_2025["Driver"].map(driver_to_team_2024)
+qualifying_2025["Team"] = qualifying_2025["Driver"].map(driver_to_team)
 qualifying_2025["TeamPerformanceScore"] = qualifying_2025["Team"].map(team_perf_score)
 
 """ Merge the 2025 Qualifying with the 2024 Race Data """
@@ -133,7 +130,7 @@ merged_data = merged_data[valid_drivers].reset_index(drop=True)
 """ Define our X and Y variables """
 X = merged_data[[
     "QualifyingTime", "RainProbability", "Temperature",
-    "TeamPerformanceScore", "CleanAirRacePace (s)"
+    "TeamPerformanceScore", "CleanAirRacePace (sec)"
 ]].copy()
 y = laps.groupby("Driver")["LapTime (s)"].mean().reindex(merged_data["Driver"]).values
 
@@ -171,7 +168,7 @@ print(by_gbr[["Driver", "Predicted_GBR (s)"]])
 """ Plot Feature Importance """
 plt.figure(figsize=(8,5))
 plt.barh(
-    ["QualiTime", "RainProb", "Temp", "TeamPerf", "CleanAirPace"],
+    ["QualiTime", "RainProb", "Temp", "TeamPerf", "CleanAirPace (sec)"],
     gbr.feature_importances_,
     color="skyblue"
 )
@@ -183,7 +180,7 @@ plt.show()
 """ Plot Effect of Clean Air Pace """
 plt.figure(figsize=(12,8))
 plt.scatter(
-    merged_data["CleanAirRacePace (s)"],
+    merged_data["CleanAirRacePace (sec)"],
     merged_data["Predicted_GBR (s)"],
     label="GBR Pred"
 )
@@ -191,12 +188,12 @@ for i, drv in enumerate(merged_data["Driver"]):
     plt.annotate(
         drv,
         (
-            merged_data["CleanAirRacePace (s)"].iloc[i],
+            merged_data["CleanAirRacePace (sec)"].iloc[i],
             merged_data["Predicted_GBR (s)"].iloc[i]
         ),
         xytext=(5,5), textcoords="offset points"
     )
-plt.xlabel("Clean Air Race Pace (s)")
+plt.xlabel("Clean Air Race Pace (sec)")
 plt.ylabel("Predicted Race Time (s) by GBR")
 plt.title("Effect of Clean Air Race Pace on GBR Predictions")
 plt.tight_layout()
