@@ -122,10 +122,11 @@ merged_data = qualifying_2025.merge(
 )
 merged_data["RainProbability"] = rain_probability
 merged_data["Temperature"] = temperature
+merged_data['QualifyingTime'] = merged_data['QualifyingTime']
 
 """ Only Keep drivers present in 2024 """
 valid_drivers = merged_data["Driver"].isin(laps["Driver"].unique())
-merged_data = merged_data[valid_drivers].reset_index(drop=True)
+merged_data = merged_data[valid_drivers] #.reset_index(drop=True)
 
 """ Define our X and Y variables """
 X = merged_data[[
